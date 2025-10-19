@@ -182,53 +182,73 @@ def tampilkan_penggarap_resmi_page(anime_list):
     st.markdown("### 📊 Daftar Penggarap")
 
     if st.session_state.get("is_mobile"):
-        baris_html = ""
+        # Layout Card untuk Mobile - Lebih Responsive
+        cards_html = ""
         for nama, info in sorted(daftar.items()):
             data_platform = data_json.get(nama, {})
             status = data_platform.get("status", "Aktif")
             platform = ambil_logo_platform(data_platform)
-            baris_html += f"""
-                <tr>
-                    <td><strong>{nama}</strong></td>
-                    <td>{info['total']}</td>
-                    <td>{info['jumlah_berjalan']}</td>
-                    <td>{status}</td>
-                    <td>{platform}</td>
-                </tr>
+            
+            status_color = "#4CAF50" if status == "Aktif" else "#999"
+            
+            cards_html += f"""
+                <div style="
+                    background: #f9f9f9;
+                    border: 1px solid #ddd;
+                    border-radius: 8px;
+                    padding: 16px;
+                    margin-bottom: 12px;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                ">
+                    <div style="
+                        font-size: 18px;
+                        font-weight: bold;
+                        margin-bottom: 12px;
+                        color: #333;
+                    ">{nama}</div>
+                    
+                    <div style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+                        <div style="flex: 1; min-width: 120px;">
+                            <div style="color: #666; font-size: 12px;">Total Garapan</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #333;">{info['total']}</div>
+                        </div>
+                        <div style="flex: 1; min-width: 120px;">
+                            <div style="color: #666; font-size: 12px;">Proyek Saat Ini</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #333;">{info['jumlah_berjalan']}</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 8px;">
+                        <span style="
+                            background: {status_color};
+                            color: white;
+                            padding: 4px 12px;
+                            border-radius: 4px;
+                            font-size: 12px;
+                            font-weight: bold;
+                        ">{status}</span>
+                    </div>
+                    
+                    <div style="
+                        font-size: 20px;
+                        margin-top: 8px;
+                    ">
+                        {platform if platform != '-' else '<span style="color: #999;">Tidak ada platform</span>'}
+                    </div>
+                </div>
             """
 
         html(f"""
-        <div style="overflow-x:auto; min-width:800px;">
         <style>
-        table {{
-            width: 100%;
-            border-collapse: collapse;
-            min-width: 800px;
-        }}
-        th, td {{
-            padding: 8px 12px;
-            border: 1px solid #ccc;
-            text-align: left;
-            white-space: nowrap;
-            max-width: none;
+        body {{
+            margin: 0;
+            padding: 0;
         }}
         </style>
-        <table>
-            <thead>
-                <tr>
-                    <th>Nama Penggarap</th>
-                    <th>Total Garapan</th>
-                    <th>Proyek Saat Ini</th>
-                    <th>Status</th>
-                    <th>Platform</th>
-                </tr>
-            </thead>
-            <tbody>
-                {baris_html}
-            </tbody>
-        </table>
+        <div style="max-width: 100%; overflow-x: hidden;">
+            {cards_html}
         </div>
-        """, height=600)
+        """, height=600, scrolling=True)
 
     else:
         header = st.columns([2.5, 1.2, 1.5, 1.2, 2.5, 1.5])
