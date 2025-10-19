@@ -1,8 +1,9 @@
 import streamlit as st
 import json
-from datetime import datetime
 import os
+from datetime import datetime
 from packaging import version
+from streamlit.components.v1 import html
 
 DATA_FILE = "data_penggarap.json"
 
@@ -40,12 +41,6 @@ def ambil_logo_platform(data):
     for kunci, ikon in ikon_map.items():
         tautan = data.get(kunci, "").strip()
         if tautan:
-            if "redirect?" in tautan and "q=" in tautan:
-                try:
-                    import urllib.parse
-                    tautan = urllib.parse.unquote(tautan.split("q=")[-1])
-                except:
-                    pass
             hasil.append(f"<a href='{tautan}' target='_blank'>{ikon}</a>")
     return " ".join(hasil) if hasil else "-"
 
@@ -117,17 +112,8 @@ def form_penggarap(nama_awal="", data_lama=None, mode="tambah"):
             if st.button("❌ Batal", key="batal_tambah"):
                 st.session_state.tambah_mode = False
                 rerun()
-
 def tampilkan_penggarap_resmi_page(anime_list):
     st.set_page_config(page_title="Penggarap Anime Resmi Indonesia", layout="wide")
-
-    st.markdown("""
-    <style>
-    a { text-decoration: none; margin-right: 6px; }
-    table td, table th { padding: 6px 12px; border: 1px solid #ccc; text-align: left; vertical-align: top; }
-    table { width: 100%; border-collapse: collapse; }
-    </style>
-    """, unsafe_allow_html=True)
 
     bulan = datetime.now().month
     musim_sekarang = (
@@ -151,14 +137,15 @@ def tampilkan_penggarap_resmi_page(anime_list):
         except:
             data_lama = {}
         form_penggarap(nama_awal=st.session_state.edit_nama, data_lama=data_lama, mode="edit")
+        return
+    elif st.session_state.tambah_mode:
+        form_penggarap(mode="tambah")
+        return
     else:
-        if not st.session_state.tambah_mode:
-            if st.button("➕ Tambah Penggarap", key="tombol_tambah_penggarap"):
-                st.session_state.tambah_mode = True
-                rerun()
-        if st.session_state.tambah_mode:
-            form_penggarap(mode="tambah")
-    # Bangun daftar penggarap
+        if st.button("➕ Tambah Penggarap", key="tombol_tambah_penggarap"):
+            st.session_state.tambah_mode = True
+            rerun()
+
     daftar = {}
     if anime_list:
         for anime in anime_list:
@@ -185,6 +172,8 @@ def tampilkan_penggarap_resmi_page(anime_list):
                     "total": 0,
                     "jumlah_berjalan": 0
                 }
+    else:
+        data_json = {}
 
     if not daftar:
         st.warning("Belum ada penggarap aktif untuk musim ini.")
@@ -192,49 +181,85 @@ def tampilkan_penggarap_resmi_page(anime_list):
 
     st.markdown("### 📊 Daftar Penggarap")
 
-    # Render tabel sebagai HTML agar scroll horizontal aktif di mobile
-    html = """
-    <div style='overflow-x:auto'>
-    <table>
-    <thead>
-    <tr>
-        <th>Nama Penggarap</th>
-        <th>Total Garapan</th>
-        <th>Proyek Saat Ini</th>
-        <th>Status</th>
-        <th>Tautan Platform</th>
-    </tr>
-    </thead>
-    <tbody>
-    """
-    for nama, info in sorted(daftar.items()):
-        data_platform = data_json.get(nama, {})
-        status = data_platform.get("status", "Aktif")
-        platform = ambil_logo_platform(data_platform)
-        html += f"""
-        <tr>
-            <td><b>{nama}</b></td>
-            <td>{info['total']}</td>
-            <td>{info['jumlah_berjalan']}</td>
-            <td>{status}</td>
-            <td>{platform}</td>
-        </tr>
-        """
-    html += "</tbody></table></div>"
-    st.markdown(html, unsafe_allow_html=True)
+    if st.session_state.get("is_mobile"):
+        baris_html = ""
+        for nama, info in sorted(daftar.items()):
+            data_platform = data_json.get(nama, {})
+            status = data_platform.get("status", "Aktif")
+            platform = ambil_logo_platform(data_platform)
+            baris_html += f"""
+                <tr>
+                    <td><strong>{nama}</strong></td>
+                    <td>{info['total']}</td>
+                    <td>{info['jumlah_berjalan']}</td>
+                    <td>{status}</td>
+                    <td>{platform}</td>
+                </tr>
+            """
 
-    # Tombol edit/hapus modular di bawah tabel
-    st.markdown("### 🔧 Aksi Penggarap")
-    for nama, info in sorted(daftar.items()):
-        key_suffix = f"{nama}_{info['total']}_{info['jumlah_berjalan']}".replace(" ", "_").replace("-", "_")
-        col_edit, col_hapus = st.columns([1, 1])
-        with col_edit:
-            if st.button(f"✏️ Edit {nama}", key=f"edit_{key_suffix}"):
-                st.session_state.edit_mode = True
-                st.session_state.edit_nama = nama
-                rerun()
-        with col_hapus:
-            if st.button(f"🗑️ Hapus {nama}", key=f"hapus_{key_suffix}"):
-                hapus_penggarap(nama)
-                st.success(f"Penggarap '{nama}' dihapus.")
-                rerun()
+        html(f"""
+        <div style="overflow-x:auto; min-width:800px;">
+        <style>
+        table {{
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 800px;
+        }}
+        th, td {{
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            text-align: left;
+            white-space: nowrap;
+            max-width: none;
+        }}
+        </style>
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Penggarap</th>
+                    <th>Total Garapan</th>
+                    <th>Proyek Saat Ini</th>
+                    <th>Status</th>
+                    <th>Platform</th>
+                </tr>
+            </thead>
+            <tbody>
+                {baris_html}
+            </tbody>
+        </table>
+        </div>
+        """, height=600)
+
+    else:
+        header = st.columns([2.5, 1.2, 1.5, 1.2, 2.5, 1.5])
+        header[0].markdown("**Nama Penggarap**")
+        header[1].markdown("**Total Garapan**")
+        header[2].markdown("**Proyek Saat Ini**")
+        header[3].markdown("**Status**")
+        header[4].markdown("**Tautan Platform**")
+        header[5].markdown("**Aksi**")
+
+        for nama, info in sorted(daftar.items()):
+            data_platform = data_json.get(nama, {})
+            status = data_platform.get("status", "Aktif")
+            platform = ambil_logo_platform(data_platform)
+            key_suffix = f"{nama}_{info['total']}_{info['jumlah_berjalan']}".replace(" ", "_").replace("-", "_")
+
+            row = st.columns([2.5, 1.2, 1.5, 1.2, 2.5, 1.5])
+            row[0].markdown(f"**{nama}**")
+            row[1].markdown(str(info["total"]))
+            row[2].markdown(str(info["jumlah_berjalan"]))
+            row[3].markdown(status)
+            row[4].markdown(platform, unsafe_allow_html=True)
+            with row[5]:
+                col_edit, col_hapus = st.columns([1, 1])
+                with col_edit:
+                    if st.button("✏️", key=f"edit_{key_suffix}"):
+                        st.session_state.edit_mode = True
+                        st.session_state.edit_nama = nama
+                        rerun()
+                with col_hapus:
+                    if st.button("🗑️", key=f"hapus_{key_suffix}"):
+                        hapus_penggarap(nama)
+                        st.success(f"Penggarap '{nama}' dihapus.")
+                        rerun()
