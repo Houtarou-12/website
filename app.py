@@ -55,17 +55,30 @@ if menu == "penggarap_resmi":
 
 # Halaman Utama
 if not selected_url and menu != "penggarap_resmi":
-    col1, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 2])
-    with col1:
+    # Responsive Filter Layout
+    if st.session_state.get("is_mobile"):
+        # Mobile Layout - Stack filters vertically
         judul_filter = st.text_input("🔍 Cari Judul")
-    with col2:
-        genre_filter = st.selectbox("Genre", ["Semua", "Action", "Romance", "Comedy", "Fantasy"])
-    with col3:
-        format_filter = st.selectbox("Format", ["Semua", "TV", "OVA", "ONA", "Spesial", "Movie"])
-    with col4:
-        tahun_filter = st.selectbox("Tahun", ["Semua"] + [str(t) for t in range(tahun_sekarang, 1899, -1)])
-    with col5:
-        musim_filter = st.selectbox("Musim", ["Semua", "Musim Semi", "Musim Panas", "Musim Gugur", "Musim Dingin"])
+        col1, col2 = st.columns(2)
+        with col1:
+            genre_filter = st.selectbox("Genre", ["Semua", "Action", "Romance", "Comedy", "Fantasy"])
+            tahun_filter = st.selectbox("Tahun", ["Semua"] + [str(t) for t in range(tahun_sekarang, 1899, -1)])
+        with col2:
+            format_filter = st.selectbox("Format", ["Semua", "TV", "OVA", "ONA", "Spesial", "Movie"])
+            musim_filter = st.selectbox("Musim", ["Semua", "Musim Semi", "Musim Panas", "Musim Gugur", "Musim Dingin"])
+    else:
+        # Desktop Layout - Horizontal filters
+        col1, col2, col3, col4, col5 = st.columns([3, 2, 2, 2, 2])
+        with col1:
+            judul_filter = st.text_input("🔍 Cari Judul")
+        with col2:
+            genre_filter = st.selectbox("Genre", ["Semua", "Action", "Romance", "Comedy", "Fantasy"])
+        with col3:
+            format_filter = st.selectbox("Format", ["Semua", "TV", "OVA", "ONA", "Spesial", "Movie"])
+        with col4:
+            tahun_filter = st.selectbox("Tahun", ["Semua"] + [str(t) for t in range(tahun_sekarang, 1899, -1)])
+        with col5:
+            musim_filter = st.selectbox("Musim", ["Semua", "Musim Semi", "Musim Panas", "Musim Gugur", "Musim Dingin"])
 
     with st.expander("➕ Tambah Anime Baru"):
         with st.form("form_tambah"):
@@ -113,33 +126,41 @@ if not selected_url and menu != "penggarap_resmi":
     st.markdown("## Populer di Fall 2025")
     if filtered:
         if st.session_state["is_mobile"]:
+            # Layout Mobile - Card Style dengan spacing lebih baik
             for i, anime in enumerate(filtered):
-                col_cover, col_info = st.columns([1, 3])
-                with col_cover:
-                    st.image(anime.get("cover", "https://via.placeholder.com/300x400?text=No+Image"), width=100)
-                with col_info:
-                    st.markdown(f"**{anime.get('title')}**")
-                    st.caption(f"{anime.get('format')} | ⭐ {anime.get('rating')}")
-                    if anime.get("genres"):
-                        st.caption(", ".join(anime.get("genres", [])[:2]))
-                    if st.button("Detail", key=f"detail_{i}"):
-                        st.query_params = {"anime": anime.get("mal_url")}
-                    if st.button("🗑️", key=f"hapus_{i}"):
-                        st.session_state["anime_list"].pop(i)
-                        simpan_ke_file(st.session_state["anime_list"])
-                        st.query_params = {}
+                with st.container():
+                    col_cover, col_info = st.columns([1, 2])
+                    with col_cover:
+                        st.image(anime.get("cover", "https://via.placeholder.com/300x400?text=No+Image"), use_container_width=True)
+                    with col_info:
+                        st.markdown(f"### {anime.get('title')}")
+                        st.caption(f"**{anime.get('format')}** | ⭐ {anime.get('rating')}")
+                        if anime.get("genres"):
+                            st.caption("🎭 " + ", ".join(anime.get("genres", [])[:3]))
+                        
+                        col_btn1, col_btn2 = st.columns([3, 1])
+                        with col_btn1:
+                            if st.button("📖 Lihat Detail", key=f"detail_{i}", use_container_width=True):
+                                st.query_params = {"anime": anime.get("mal_url")}
+                        with col_btn2:
+                            if st.button("🗑️", key=f"hapus_{i}", use_container_width=True):
+                                st.session_state["anime_list"].pop(i)
+                                simpan_ke_file(st.session_state["anime_list"])
+                                st.query_params = {}
+                    st.markdown("---")
         else:
+            # Layout Desktop - Grid 5 kolom
             cols = st.columns(5)
             for i, anime in enumerate(filtered):
                 with cols[i % 5]:
                     st.image(anime.get("cover", "https://via.placeholder.com/300x400?text=No+Image"), use_container_width=True)
                     judul = anime.get("title") or "Judul Tidak Ditemukan"
-                    if st.button(judul, key=f"detail_{i}"):
+                    if st.button(judul, key=f"detail_{i}", use_container_width=True):
                         st.query_params = {"anime": anime.get("mal_url")}
                     st.caption(f"{anime.get('format','')} | ⭐ {anime.get('rating','N/A')}")
                     if anime.get("genres"):
                         st.caption(", ".join(anime.get("genres", [])[:3]))
-                    if st.button("🗑️", key=f"hapus_{i}"):
+                    if st.button("🗑️", key=f"hapus_{i}", use_container_width=True):
                         st.session_state["anime_list"].pop(i)
                         simpan_ke_file(st.session_state["anime_list"])
                         st.query_params = {}
@@ -159,10 +180,11 @@ if anime:
         if st.button("➕ Proyek Baru"):
             st.session_state["tambah_proyek"] = selected_url
 
-    cols = st.columns([1, 2])
-    with cols[0]:
-        st.image(anime.get("cover", "https://via.placeholder.com/300x400?text=No+Image"), width=300)
-    with cols[1]:
+    # Responsive layout untuk detail anime
+    if st.session_state.get("is_mobile"):
+        # Mobile Layout - Stack vertically
+        st.image(anime.get("cover", "https://via.placeholder.com/300x400?text=No+Image"), use_container_width=True)
+        st.markdown("### 📋 Informasi")
         st.write(f"**Format:** {anime.get('format','')}")
         st.write(f"**Episode:** {anime.get('episodes','?')}")
         st.write(f"**Status:** {anime.get('status','?')}")
@@ -176,9 +198,29 @@ if anime:
             st.write(f"**Themes:** {', '.join(anime.get('themes',[]))}")
         if anime.get("demographic"):
             st.write(f"**Demographic:** {', '.join(anime.get('demographic',[]))}")
-        st.write(f"[Lihat di MAL]({anime.get('mal_url','')})")
-
+        st.markdown(f"[🔗 Lihat di MAL]({anime.get('mal_url','')})")
         refresh_data(anime, selected_url)
+    else:
+        # Desktop Layout - Side by side
+        cols = st.columns([1, 2])
+        with cols[0]:
+            st.image(anime.get("cover", "https://via.placeholder.com/300x400?text=No+Image"), width=300)
+        with cols[1]:
+            st.write(f"**Format:** {anime.get('format','')}")
+            st.write(f"**Episode:** {anime.get('episodes','?')}")
+            st.write(f"**Status:** {anime.get('status','?')}")
+            st.write(f"**Tayang:** {anime.get('aired','?')}")
+            st.write(f"**Musim:** {anime.get('season','')}")
+            st.write(f"**Studio:** {anime.get('studio','?')}")
+            st.write(f"**Sumber:** {anime.get('source','?')}")
+            st.write(f"**Rating:** {anime.get('rating','')}")
+            st.write(f"**Genres:** {', '.join(anime.get('genres',[]))}")
+            if anime.get("themes"):
+                st.write(f"**Themes:** {', '.join(anime.get('themes',[]))}")
+            if anime.get("demographic"):
+                st.write(f"**Demographic:** {', '.join(anime.get('demographic',[]))}")
+            st.write(f"[Lihat di MAL]({anime.get('mal_url','')})")
+            refresh_data(anime, selected_url)
 
     st.markdown("### Sinopsis")
     edit_sinopsis(anime, selected_url)
@@ -186,36 +228,75 @@ if anime:
     st.markdown("### Proyek Garapan")
     proyek_list = anime.get("proyek", [])
     if proyek_list:
-        for idx, p in enumerate(proyek_list):
-            col1, col2, col3 = st.columns([5, 3, 2])
-            with col1:
-                penggarap_text = f"**{p['penggarap']}**"
-                if p.get("catatan"):
-                    penggarap_text += f" &nbsp; <span style='color:#ccc;font-size:0.9em;'>📝 {p['catatan']}</span>"
-                st.markdown(penggarap_text, unsafe_allow_html=True)
-            with col2:
-                warna = {
-                    "Berjalan": "#4CAF50",
-                    "Mangkrak": "#F44336",
-                    "Tentatif": "#9E9E9E",
-                    "Selesai": "#2196F3"
-                }.get(p["status"], "#CCCCCC")
-                st.markdown(
-                    f"<span style='background-color:{warna};color:white;padding:4px 8px;border-radius:4px;'>{p['status']}</span> &nbsp; "
-                    f"<a href='{p['link']}' target='_blank' style='background-color:#eee;padding:4px 8px;border-radius:4px;text-decoration:none;'>{p['format']}</a>",
-                    unsafe_allow_html=True
-                )
-            with col3:
-                col_edit, col_hapus = st.columns([1, 1], gap="small")
-                with col_edit:
-                    if st.button("✏️", key=f"edit_proyek_{idx}", use_container_width=True):
-                        st.session_state["edit_proyek"] = (selected_url, idx)
-                with col_hapus:
-                    if st.button("🗑️", key=f"hapus_proyek_{idx}", use_container_width=True):
-                        anime["proyek"].pop(idx)
-                        simpan_ke_file(st.session_state["anime_list"])
-                        st.success("Proyek dihapus.")
-                        st.query_params = {"anime": selected_url}
+        if st.session_state.get("is_mobile"):
+            # Mobile Layout - Card style untuk proyek
+            for idx, p in enumerate(proyek_list):
+                with st.container():
+                    st.markdown(f"**{p['penggarap']}**")
+                    if p.get("catatan"):
+                        st.caption(f"📝 {p['catatan']}")
+                    
+                    col_status, col_format = st.columns([1, 1])
+                    with col_status:
+                        warna = {
+                            "Berjalan": "#4CAF50",
+                            "Mangkrak": "#F44336",
+                            "Tentatif": "#9E9E9E",
+                            "Selesai": "#2196F3"
+                        }.get(p["status"], "#CCCCCC")
+                        st.markdown(
+                            f"<span style='background-color:{warna};color:white;padding:4px 8px;border-radius:4px;font-size:12px;'>{p['status']}</span>",
+                            unsafe_allow_html=True
+                        )
+                    with col_format:
+                        st.markdown(
+                            f"<a href='{p['link']}' target='_blank' style='background-color:#eee;padding:4px 8px;border-radius:4px;text-decoration:none;color:#333;font-size:12px;'>{p['format']}</a>",
+                            unsafe_allow_html=True
+                        )
+                    
+                    col_edit, col_hapus = st.columns([1, 1])
+                    with col_edit:
+                        if st.button("✏️ Edit", key=f"edit_proyek_{idx}", use_container_width=True):
+                            st.session_state["edit_proyek"] = (selected_url, idx)
+                    with col_hapus:
+                        if st.button("🗑️ Hapus", key=f"hapus_proyek_{idx}", use_container_width=True):
+                            anime["proyek"].pop(idx)
+                            simpan_ke_file(st.session_state["anime_list"])
+                            st.success("Proyek dihapus.")
+                            st.query_params = {"anime": selected_url}
+                    st.markdown("---")
+        else:
+            # Desktop Layout - Table style
+            for idx, p in enumerate(proyek_list):
+                col1, col2, col3 = st.columns([5, 3, 2])
+                with col1:
+                    penggarap_text = f"**{p['penggarap']}**"
+                    if p.get("catatan"):
+                        penggarap_text += f" &nbsp; <span style='color:#ccc;font-size:0.9em;'>📝 {p['catatan']}</span>"
+                    st.markdown(penggarap_text, unsafe_allow_html=True)
+                with col2:
+                    warna = {
+                        "Berjalan": "#4CAF50",
+                        "Mangkrak": "#F44336",
+                        "Tentatif": "#9E9E9E",
+                        "Selesai": "#2196F3"
+                    }.get(p["status"], "#CCCCCC")
+                    st.markdown(
+                        f"<span style='background-color:{warna};color:white;padding:4px 8px;border-radius:4px;'>{p['status']}</span> &nbsp; "
+                        f"<a href='{p['link']}' target='_blank' style='background-color:#eee;padding:4px 8px;border-radius:4px;text-decoration:none;'>{p['format']}</a>",
+                        unsafe_allow_html=True
+                    )
+                with col3:
+                    col_edit, col_hapus = st.columns([1, 1], gap="small")
+                    with col_edit:
+                        if st.button("✏️", key=f"edit_proyek_{idx}", use_container_width=True):
+                            st.session_state["edit_proyek"] = (selected_url, idx)
+                    with col_hapus:
+                        if st.button("🗑️", key=f"hapus_proyek_{idx}", use_container_width=True):
+                            anime["proyek"].pop(idx)
+                            simpan_ke_file(st.session_state["anime_list"])
+                            st.success("Proyek dihapus.")
+                            st.query_params = {"anime": selected_url}
     else:
         st.info("Belum ada proyek garapan untuk anime ini.")
 
