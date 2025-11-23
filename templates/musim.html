@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}Anime Musim{% endblock %}
+{% block content %}
+
+<h2>{{ musim_label | musim_id_to_label }}</h2>
+
+<div class="anime-grid">
+  {% for anime in anime_musiman[:5] %}
+    <div class="anime-card">
+      <a href="/detail/{{ anime.id }}" class="card-link">
+        <img src="{{ anime.poster }}" alt="{{ anime.title }}" class="poster" loading="lazy">
+        <div class="info">
+          <p class="title" title="{{ anime.title }}">{{ anime.title }}</p>
+          <p class="score">⭐ {{ anime.score }}</p>
+          <p class="genres">
+            {{ (anime.genres + anime.themes + anime.demographics)[:2] | join(', ') }}
+          </p>
+        </div>
+      </a>
+    </div>
+  {% endfor %}
+
+  <!-- Grid ke-6 sebagai tombol "Semua >>>>>>" -->
+  <div class="anime-card lihat-semua-card">
+    <a href="/musim/{{ musim_label | lower | replace(' ', '-') }}" class="card-link">
+      <div class="lihat-semua-panel">
+        <p class="lihat-semua-text">Semua... >>>>>></p>
+      </div>
+    </a>
+  </div>
+</div>
+
+<style>
+.anime-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 180px);
+  gap: 16px;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 20px auto 0;
+}
+.anime-card {
+  background-color: #1e1e1e;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+}
+.card-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 180px;
+  text-decoration: none;
+  color: inherit;
+  padding: 8px;
+  margin: 0 auto;
+}
+.poster {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 4px;
+}
+.info {
+  padding: 8px 4px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.title {
+  font-size: 0.95em;
+  font-weight: 600;
+  text-align: center;
+  margin: 6px 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.score {
+  font-size: 0.9em;
+  margin: 4px 0;
+  text-align: center;
+}
+.genres {
+  font-size: 0.85em;
+  opacity: 0.8;
+  text-align: center;
+  margin: 2px 0;
+}
+
+/* Grid ke-6 khusus */
+.lihat-semua-card {
+  background-color: #1a1a1a;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.lihat-semua-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.lihat-semua-text {
+  font-size: 1em;
+  color: #4da6ff;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw;
+    background-color: #121212;
+    color: #ffffff;
+  }
+  h2 {
+    margin: 0 !important;
+    padding: 12px;
+    font-size: 1.2em;
+    border-bottom: 1px solid #444;
+    text-align: left;
+  }
+  .anime-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw;
+  }
+  .anime-card {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    background: none;
+  }
+  .card-link {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    align-items: center;
+  }
+  .poster {
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .info {
+    width: 100%;
+    align-items: center;
+    padding: 6px 0 !important;
+  }
+  .title,
+  .score,
+  .genres {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    text-align: center;
+    color: #ffffff;
+  }
+  .lihat-semua-text {
+    font-size: 0.9em;
+  }
+}
+
+/* Tablet */
+@media (min-width: 601px) and (max-width: 900px) {
+  .anime-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+</style>
+
+{% endblock %}

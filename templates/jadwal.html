@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% block title %}Jadwal Siaran Anime{% endblock %}
+{% block content %}
+
+<div class="jadwal-header">
+  <h2 class="judul-jadwal">📅 Jadwal Siaran Anime</h2>
+  <button class="tambah-btn" onclick="document.getElementById('jadwalModal').classList.remove('hidden')">+Jadwal</button>
+</div>
+
+<div class="jadwal-layout" style="display:flex; gap:2rem;">
+  <div class="jadwal-container" style="flex:3;">
+    <aside class="catatan-blok" style="margin-bottom:1rem; font-size:0.9rem; opacity:0.8;">
+      <h4>Catatan:</h4>
+      <p>
+        Hari, tanggal, waktu/pukul, bulan, tahun, mungkin berbeda di tiap daerah mau pun platform.<br>
+        Silakan pastikan sendiri jadwal di tempat Anda menonton.<br>
+        Karena jadwal hanya diambil dari salah satu platform saja, maka ada baiknya untuk memeriksanya sendiri.<br>
+        Sankyu..
+      </p>
+    </aside>
+
+    {% for hari, daftar in jadwal_data.items() %}
+      <section class="jadwal-section">
+        <h3 class="hari-header">{{ hari }}</h3>
+        {% if daftar %}
+          <table class="jadwal-table">
+            <thead>
+              <tr>
+                <th>Jam</th>
+                <th>Judul Anime</th>
+                <th>Catatan</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for anime in daftar %}
+                <tr>
+                  <td>{{ anime.jam if anime.jam != "-" else "-" }}</td>
+                  <td><a href="{{ anime.link }}">{{ anime.title }}</a></td>
+                  <td>{{ anime.catatan or "-" }}</td>
+                  <td>
+                    <button class="edit-btn" onclick="bukaEditModal('{{ anime.title }}', '{{ anime.link }}', '{{ anime.hari }}', '{{ anime.jam }}', '{{ anime.catatan|default('') }}')">✏️</button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        {% else %}
+          <p style="opacity:0.6; font-size:0.9rem;">Belum ada anime untuk hari ini</p>
+        {% endif %}
+      </section>
+    {% endfor %}
+  </div>
+</div>
+
+<!-- Modal Tambah Jadwal -->
+<div id="jadwalModal" class="modal hidden">
+  <div class="modal-content">
+    <h3>Tambah Jadwal Siaran</h3>
+    <form method="POST" action="/tambah-jadwal" class="edit-jadwal-form">
+      <label for="link">Anime:</label>
+      <input type="text" name="link" required placeholder="Contoh: /detail/12">
+
+      <label for="hari">Hari Tayang:</label>
+      <select name="hari" required>
+        <option value="">-- Pilih Hari --</option>
+        {% for h in ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"] %}
+          <option value="{{ h }}">{{ h }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="jam">Pukul:</label>
+      <div style="display:flex; gap:6px; margin-bottom:6px;">
+        <input name="jam_h" list="jam_h_list" placeholder="Jam (0–23)" style="width:60px;" 
+               required pattern="^([01]?[0-9]|2[0-3])$">
+        <input name="jam_m" list="jam_m_list" placeholder="Menit (00–59)" style="width:60px;" 
+               required pattern="^([0-5][0-9])$">
+      </div>
+
+      <label for="catatan">Catatan:</label>
+      <textarea name="catatan" id="catatanInput" maxlength="120" oninput="cekCatatan(this)"></textarea>
+      <small id="catatanWarning" style="color:#f44336; display:none;">Maksimal 120 karakter</small>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+        <button type="submit" class="simpan-btn">Simpan</button>
+        <button type="button" class="tutup-btn" onclick="document.getElementById('jadwalModal').classList.add('hidden')">Tutup</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- Modal Edit Jadwal -->
+<div id="editJadwalModal" class="modal hidden">
+  <div class="modal-content" style="position:relative;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 style="margin:0;">Edit Jadwal Siaran</h3>
+      <form method="POST" action="/hapus-jadwal">
+        <input type="hidden" name="hapus_link" id="hapusLink">
+        <input type="hidden" name="hapus_title" id="hapusTitle">
+        <button type="submit" class="hapus-btn" title="Hapus Jadwal" style="font-size:1rem; background:none; border:none; cursor:pointer;">🗑️</button>
+      </form>
+    </div>
+
+    <form method="POST" action="/edit-jadwal" class="edit-jadwal-form" style="margin-top:1rem;">
+      <input type="hidden" name="link" id="editLink">
+      <input type="hidden" name="title" id="editTitle">
+
+      <label for="editHari">Hari Tayang:</label>
+      <select name="hari" id="editHari" required>
+        {% for h in ["Senin","Selasa","Rabu","Kamis","Jumat","Sabtu","Minggu"] %}
+          <option value="{{ h }}">{{ h }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="editJam">Pukul:</label>
+      <div style="display:flex; gap:6px; margin-bottom:6px;">
+        <input name="jam_h" id="editJamH" list="jam_h_list" placeholder="Jam (0–23)" style="width:60px;" 
+               required pattern="^([01]?[0-9]|2[0-3])$">
+        <input name="jam_m" id="editJamM" list="jam_m_list" placeholder="Menit (00–59)" style="width:60px;" 
+               required pattern="^([0-5][0-9])$">
+      </div>
+
+      <label for="editCatatan">Catatan:</label>
+      <textarea name="catatan" id="editCatatanInput" maxlength="120" oninput="cekCatatanEdit(this)"></textarea>
+      <small id="editCatatanWarning" style="color:#f44336; display:none;">Maksimal 120 karakter</small>
+
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:1rem;">
+        <button type="submit" class="simpan-btn">Simpan</button>
+        <button type="button" class="tutup-btn" onclick="document.getElementById('editJadwalModal').classList.add('hidden')">Tutup</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Datalist untuk jam dan menit -->
+<datalist id="jam_h_list">
+  {% for h in range(0, 24) %}
+    <option value="{{ "%02d"|format(h) }}">
+  {% endfor %}
+</datalist>
+<datalist id="jam_m_list">
+  {% for m in range(0, 60, 5) %}
+    <option value="{{ "%02d"|format(m) }}">
+  {% endfor %}
+</datalist>
+
+<script>
+  function bukaEditModal(title, link, hari, jam, catatan) {
+    document.getElementById("editTitle").value = title;
+    document.getElementById("editLink").value = link;
+    document.getElementById("hapusTitle").value = title;
+    document.getElementById("hapusLink").value = link;
+    document.getElementById("editHari").value = hari;
+
+    const jamSplit = jam === "-" ? ["", ""] : jam.split(":");
+    document.getElementById("editJamH").value = jamSplit[0];
+    document.getElementById("editJamM").value = jamSplit[1];
+
+    document.getElementById("editCatatanInput").value = catatan;
+    document.getElementById("editJadwalModal").classList.remove("hidden");
+  }
+
+  function cekCatatan(input) {
+    const warning = document.getElementById("catatanWarning");
+    warning.style.display = input.value.length >= 120 ? "block" : "none";
+  }
+
+  function cekCatatanEdit(input) {
+    const warning = document.getElementById("editCatatanWarning");
+    warning.style.display = input.value.length >= 120 ? "block" : "none";
+  }
+</script>
+
+{% endblock %}

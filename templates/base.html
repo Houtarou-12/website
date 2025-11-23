@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Database Siaran Anime Indonesia{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/custom.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-content">
+      <!-- Logo kiri -->
+      <img src="/static/img/logo.png" alt="Logo" class="logo">
+
+      <!-- Teks kanan -->
+      <div class="logo-title">
+        <h1 class="site-title">Database Siaran Anime Indonesia</h1>
+        <p class="site-subtext">Situs web informasi siaran anime di Indonesia.</p>
+      </div>
+
+      <!-- Tombol hamburger kanan -->
+      <button class="menu-icon" onclick="toggleMenu()" aria-controls="mainNav" aria-expanded="false">☰</button>
+    </div>
+
+    <!-- Navigasi utama -->
+    <nav class="main-nav" id="mainNav">
+      <a href="/" class="home-icon" aria-label="Beranda">
+        <img src="/static/img/home-icon.png" alt="Home" style="width:20px; vertical-align:middle;">
+      </a>
+
+      <div class="dropdown">
+        <button class="dropbtn" type="button" onclick="toggleDropdown(this)" aria-expanded="false">Katalog</button>
+        <div class="dropdown-content" role="menu">
+          <a href="/jadwal"><span class="icon">📅</span> Jadwal</a>
+          <a href="/musiman"><span class="icon">🌸</span> Anime Musiman</a>
+        </div>
+      </div>
+
+      <a href="/penggarap">Penggarap</a>
+
+      <div class="dropdown">
+        <button class="dropbtn" type="button" onclick="toggleDropdown(this)" aria-expanded="false">Tautan</button>
+        <div class="dropdown-content" role="menu">
+          <a href="https://discord.com"><span class="icon">💬</span> Discord</a>
+          <a href="https://saweria.co"><span class="icon">💰</span> Donasi</a>
+          <a href="https://instagram.com"><span class="icon">📸</span> Media Sosial</a>
+        </div>
+      </div>
+
+      {% if user_logged_in %}
+        <a href="/profil">Profil</a>
+        <a href="/logout">Keluar</a>
+      {% else %}
+        <a href="/login">Masuk</a>
+      {% endif %}
+    </nav>
+  </header>
+
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">
+    <p style="text-align:center; font-size:0.8rem; opacity:0.6;">
+      &copy; {{ current_year }} Database Siaran Anime Indonesia
+    </p>
+  </footer>
+
+  <script>
+    function toggleMenu() {
+      const nav = document.getElementById("mainNav");
+      const btn = document.querySelector(".menu-icon");
+      const isOpen = nav.classList.toggle("show");
+      if (btn) btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
+
+    function closeAllDropdowns(exceptEl) {
+      document.querySelectorAll(".dropdown.open").forEach(d => {
+        if (!exceptEl || d !== exceptEl) {
+          d.classList.remove("open");
+          const btn = d.querySelector(".dropbtn");
+          if (btn) btn.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+
+    // Aktifkan dropdown di mobile (klik)
+    function toggleDropdown(btn) {
+      // Pastikan menu utama terlihat di mobile
+      const nav = document.getElementById("mainNav");
+      if (window.matchMedia("(max-width: 600px)").matches && !nav.classList.contains("show")) {
+        nav.classList.add("show");
+        const menuBtn = document.querySelector(".menu-icon");
+        if (menuBtn) menuBtn.setAttribute("aria-expanded", "true");
+      }
+
+      const parent = btn.closest(".dropdown");
+      const willOpen = !parent.classList.contains("open");
+      // Tutup dropdown lain
+      closeAllDropdowns(parent);
+      // Toggle yang ini
+      parent.classList.toggle("open", willOpen);
+      btn.setAttribute("aria-expanded", willOpen ? "true" : "false");
+    }
+
+    // Klik di luar menutup dropdown (khusus mobile)
+    document.addEventListener("click", function(e) {
+      const isInsideDropdown = e.target.closest(".dropdown");
+      const isMenuIcon = e.target.closest(".menu-icon");
+      if (window.matchMedia("(max-width: 600px)").matches) {
+        if (!isInsideDropdown && !isMenuIcon) {
+          closeAllDropdowns();
+        }
+      }
+    });
+  </script>
+</body>
+</html>

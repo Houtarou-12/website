@@ -1,0 +1,324 @@
+{% extends "base.html" %}
+{% block title %}Katalog Anime{% endblock %}
+{% block content %}
+
+<div class="katalog-header">
+  <form method="GET" class="filter-form">
+    <input type="text" name="judul" placeholder="🔍 Cari Judul" class="search-input">
+
+    <select name="genre">
+      <option value="">Genre: Semua</option>
+      {% for g in [
+        'Action','Adventure','Comedy','Drama','Fantasy','Horror','Mystery','Romance','Sci-Fi','Slice of Life','Sports','Supernatural','Suspense'
+      ] %}
+      <option value="{{ g }}">{{ g }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="theme">
+      <option value="">Tema: Semua</option>
+      {% for t in [
+        'Gag Humor','Military','Music','Parody','School','Space','Strategy Game','Survival','Team Sports','Workplace'
+      ] %}
+      <option value="{{ t }}">{{ t }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="demografi">
+      <option value="">Demografi: Semua</option>
+      {% for d in ['Shounen','Shoujo','Seinen','Josei','Kids'] %}
+      <option value="{{ d }}">{{ d }}</option>
+      {% endfor %}
+    </select>
+
+    <select name="musim">
+      <option value="">Musim: Semua</option>
+      <option value="Musim Semi">Musim Semi</option>
+      <option value="Musim Panas">Musim Panas</option>
+      <option value="Musim Gugur">Musim Gugur</option>
+      <option value="Musim Dingin">Musim Dingin</option>
+    </select>
+
+    <select name="tahun">
+      <option value="">Tahun: Semua</option>
+      {% for y in range(2025, 1934, -1) %}
+      <option value="{{ y }}">{{ y }}</option>
+      {% endfor %}
+    </select>
+
+    <button type="submit">🔎 Filter</button>
+  </form>
+
+  <button onclick="openModal()" class="tambah-btn">+Anime</button>
+</div>
+
+<!-- Musiman dan Daftar Default hanya jika tidak ada filter -->
+{% if not judul and not genre and not theme and not demografi and not musim and not tahun %}
+<section class="musiman-preview">
+  <div class="musiman-header">
+    <h2>{{ musim_label | musim_id_to_label }}</h2>
+  </div>
+  <div class="musiman-grid">
+    {% for anime in anime_musiman[:5] %}
+      <div class="anime-card">
+        <a href="/detail/{{ anime.id }}" class="card-link">
+          <img src="{{ anime.poster }}" alt="{{ anime.title }}" class="poster" loading="lazy">
+          <div class="info">
+            <p class="title" title="{{ anime.title }}">{{ anime.title }}</p>
+            <p class="score">⭐ {{ anime.score }}</p>
+            <p class="genres">
+              {{ (anime.genres + anime.themes + anime.demographics)[:2] | join(', ') }}
+            </p>
+          </div>
+        </a>
+      </div>
+    {% endfor %}
+    <div class="anime-card lihat-semua-card">
+      <a href="/musim/{{ musim_label | lower | replace(' ', '-') }}" class="card-link">
+        <div class="lihat-semua-panel">
+          <p class="lihat-semua-text">Lihat semua&gt;</p>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<h2>📋 Daftar Anime</h2>
+<div class="anime-grid">
+  {% for anime in anime_list[:6] %}
+    <div class="anime-card">
+      <a href="/detail/{{ anime.id }}" class="card-link">
+        <img src="{{ anime.poster }}" alt="{{ anime.title }}" class="poster" loading="lazy">
+        <div class="info">
+          <p class="title" title="{{ anime.title }}">{{ anime.title }}</p>
+          <p class="score">⭐ {{ anime.score }}</p>
+          <p class="genres">
+            {{ (anime.genres + anime.themes + anime.demographics)[:2] | join(', ') }}
+          </p>
+        </div>
+      </a>
+    </div>
+  {% else %}
+    <p style="opacity:0.5;">Belum ada data anime.</p>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- Hasil Pencarian (hanya jika filter aktif) -->
+{% if judul or genre or theme or demografi or musim or tahun %}
+<h2>🔍 Hasil Pencarian</h2>
+<div class="anime-grid">
+  {% for anime in anime_list %}
+    <div class="anime-card">
+      <a href="/detail/{{ anime.id }}" class="card-link">
+        <img src="{{ anime.poster }}" alt="{{ anime.title }}" class="poster" loading="lazy">
+        <div class="info">
+          <p class="title" title="{{ anime.title }}">{{ anime.title }}</p>
+          <p class="score">⭐ {{ anime.score }}</p>
+          <p class="genres">
+            {{ (anime.genres + anime.themes + anime.demographics)[:2] | join(', ') }}
+          </p>
+        </div>
+      </a>
+    </div>
+  {% else %}
+    <p style="opacity:0.5;">Tidak ditemukan hasil yang cocok.</p>
+  {% endfor %}
+</div>
+{% endif %}
+<style>
+/* Grid Anime */
+.anime-grid,
+.musiman-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 180px);
+  gap: 16px;
+  justify-content: center;
+  max-width: 1200px;
+  margin: 20px auto 0;
+}
+.anime-card {
+  background-color: #1e1e1e;
+  border-radius: 6px;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+}
+.card-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 180px;
+  text-decoration: none;
+  color: inherit;
+  padding: 8px;
+  margin: 0 auto;
+}
+.poster {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  border-radius: 4px;
+}
+.info {
+  padding: 8px 4px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.title {
+  font-size: 0.95em;
+  font-weight: 600;
+  text-align: center;
+  margin: 6px 0;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.score {
+  font-size: 0.9em;
+  margin: 4px 0;
+  text-align: center;
+}
+.genres {
+  font-size: 0.85em;
+  opacity: 0.8;
+  text-align: center;
+  margin: 2px 0;
+}
+
+/* Header Musiman */
+.musiman-preview {
+  margin: 24px auto 0;
+  max-width: 1200px;
+}
+.musiman-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Grid ke-6 khusus */
+.lihat-semua-card {
+  background-color: #1a1a1a;
+  border-radius: 6px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.lihat-semua-panel {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.lihat-semua-text {
+  font-size: 1em;
+  color: #4da6ff;
+  font-weight: bold;
+  text-align: center;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  html, body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw;
+    background-color: #121212;
+    color: #ffffff;
+  }
+  .katalog-header,
+  h2 {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw;
+    border-bottom: 1px solid #444;
+    background: none;
+    color: #ffffff;
+    text-align: left;
+  }
+  .anime-grid,
+  .musiman-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100vw;
+  }
+  .anime-card {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    background: none;
+  }
+  .card-link {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    align-items: center;
+  }
+  .poster {
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .info {
+    width: 100%;
+    align-items: center;
+    padding: 6px 0 !important;
+  }
+  .title,
+  .score,
+  .genres {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100%;
+    text-align: center;
+    color: #ffffff;
+  }
+}
+
+/* Tablet */
+@media (min-width: 601px) and (max-width: 900px) {
+  .anime-grid,
+  .musiman-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+</style>
+
+<!-- Modal Tambah Anime -->
+<div id="modal" class="modal hidden">
+  <div class="modal-content">
+    <h3>➕ Tambah Anime dari MAL</h3>
+    <form method="POST" action="/">
+      <input type="text" name="mal_url" placeholder="Tempel URL MAL di sini" required>
+      <div class="modal-buttons">
+        <button type="submit" class="btn-primary">Tambah</button>
+        <button type="button" onclick="closeModal()" class="btn-secondary">Tutup</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openModal() {
+  document.body.classList.add("modal-open");
+  document.getElementById("modal").classList.remove("hidden");
+}
+function closeModal() {
+  document.body.classList.remove("modal-open");
+  document.getElementById("modal").classList.add("hidden");
+}
+</script>
+
+{% endblock %}

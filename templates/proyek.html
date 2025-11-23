@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Database Proyek Anime{% endblock %}
+{% block content %}
+<h2>📁 Proyek Garapan</h2>
+
+<!-- Tombol Tambah -->
+<button onclick="openProyekModal()" class="tambah-btn">+Proyek</button>
+
+<!-- Daftar Proyek -->
+<div class="proyek-list">
+  {% for proyek in proyek_list %}
+    <div class="proyek-card">
+      <p><strong>{{ proyek.judul }}</strong></p>
+      <p>Status: {{ proyek.status }}</p>
+      <p>Tahun: {{ proyek.tahun }}</p>
+    </div>
+  {% endfor %}
+</div>
+
+<!-- Modal Tambah Proyek -->
+<div id="proyek-modal" class="modal hidden">
+  <div class="modal-content">
+    <h3>➕ Tambah Proyek</h3>
+    <form id="formProyek" onsubmit="submitProyek(event)">
+      <input type="text" name="id" placeholder="ID Proyek" required>
+      <input type="text" name="judul" placeholder="Judul Proyek" required>
+      <input type="text" name="status" placeholder="Status (Berjalan, Selesai, Mangkrak)" required>
+      <input type="number" name="tahun" placeholder="Tahun" required>
+      <div class="modal-buttons">
+        <button type="submit" class="btn-primary">Simpan</button>
+        <button type="button" onclick="closeProyekModal()" class="btn-secondary">Tutup</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+function openProyekModal() {
+  document.getElementById("proyek-modal").classList.remove("hidden");
+}
+function closeProyekModal() {
+  document.getElementById("proyek-modal").classList.add("hidden");
+}
+
+function submitProyek(e) {
+  e.preventDefault();
+  const form = document.getElementById("formProyek");
+  const data = new FormData(form);
+
+  fetch("/tambah-proyek", {
+    method: "POST",
+    body: data
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.success) {
+      closeProyekModal();
+      window.location.reload();
+    } else {
+      alert("Gagal menyimpan proyek.");
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    alert("Terjadi kesalahan saat menyimpan.");
+  });
+}
+</script>
+
+<style>
+.tambah-btn {
+  margin: 1rem 0;
+  padding: 8px 16px;
+  font-size: 1em;
+  background-color: #2e8b57;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.proyek-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.proyek-card {
+  background-color: #1e1e1e;
+  padding: 12px;
+  border-radius: 6px;
+  color: #f0f0f0;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background-color: #1e1e1e;
+  color: #f0f0f0;
+  border: 1px solid #333;
+  padding: 20px;
+  border-radius: 6px;
+  width: 300px;
+}
+
+.modal-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.btn-primary {
+  padding: 6px 12px;
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+}
+
+.btn-secondary {
+  padding: 6px 12px;
+  background-color: #FFD700;
+  color: #000;
+  border: none;
+  border-radius: 4px;
+}
+
+.hidden {
+  display: none;
+}
+</style>
+{% endblock %}

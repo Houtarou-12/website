@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Database Siaran Anime Indonesia{% endblock %}
+{% block content %}
+
+<!-- Filter & Pencarian -->
+<section class="filter-section">
+  <form method="GET" action="/" class="filter-form">
+    <input type="text" name="q" placeholder="Cari Judul" value="{{ request.args.get('q', '') }}">
+    <select name="genre">
+      <option value="">Genre: Semua</option>
+      {% for g in genre_list %}
+        <option value="{{ g }}" {% if request.args.get('genre') == g %}selected{% endif %}>{{ g }}</option>
+      {% endfor %}
+    </select>
+    <select name="tema">
+      <option value="">Tema: Semua</option>
+      {% for t in tema_list %}
+        <option value="{{ t }}" {% if request.args.get('tema') == t %}selected{% endif %}>{{ t }}</option>
+      {% endfor %}
+    </select>
+    <select name="demografi">
+      <option value="">Demografi: Semua</option>
+      {% for d in demografi_list %}
+        <option value="{{ d }}" {% if request.args.get('demografi') == d %}selected{% endif %}>{{ d }}</option>
+      {% endfor %}
+    </select>
+    <select name="musim">
+      <option value="">Musim: Semua</option>
+      {% for m in musim_list %}
+        <option value="{{ m }}" {% if request.args.get('musim') == m %}selected{% endif %}>{{ m }}</option>
+      {% endfor %}
+    </select>
+    <select name="tahun">
+      <option value="">Tahun: Semua</option>
+      {% for y in tahun_list %}
+        <option value="{{ y }}" {% if request.args.get('tahun') == y %}selected{% endif %}>{{ y }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit">🔍</button>
+  </form>
+</section>
+
+<!-- Anime Musiman -->
+<section class="musiman-preview">
+  <div class="musiman-header">
+    <h3>{{ musim_label }}</h3>
+    <a href="/musim/{{ musim_label | lower | replace(' ', '-') }}" class="lihat-semua">Lihat semua</a>
+  </div>
+  <div class="musiman-grid">
+    {% for anime in anime_musiman %}
+      <div class="anime-card">
+        <a href="{{ url_for('halaman_detail_anime', index=anime.id) }}">
+          <img src="{{ anime.poster }}" alt="{{ anime.title }}">
+          <p>{{ anime.title }}</p>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+<!-- Daftar Anime -->
+<section class="daftar-anime">
+  <h3>Daftar Anime</h3>
+  <div class="anime-grid">
+    {% for anime in daftar_anime %}
+      <div class="anime-card">
+        <a href="{{ url_for('halaman_detail_anime', index=anime.id) }}">
+          <img src="{{ anime.poster }}" alt="{{ anime.title }}">
+          <p>{{ anime.title }}</p>
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
+{% endblock %}

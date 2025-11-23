@@ -1,0 +1,93 @@
+{
+  "Senin": [
+    {
+      "title": "Bukiyou na Senpai.",
+      "link": "http://127.0.0.1:5000/detail/2",
+      "hari": "Senin",
+      "jam": "21:00",
+      "catatan": ""
+    },
+    {
+      "title": "Ansatsusha de Aru Ore no Status ga Yuusha yori mo Akiraka ni Tsuyoi no da ga",
+      "link": "http://127.0.0.1:5000/detail/5",
+      "hari": "Senin",
+      "jam": "23:30",
+      "catatan": ""
+    }
+  ],
+  "Selasa": [
+    {
+      "title": "Shinjiteita Nakama-tachi ni Dungeon Okuchi de Korosarekaketa ga Gift \"Mugen Gacha\" de Level 9999 no Nakama-tachi wo Te ni Irete Moto Party Member to Sekai ni Fukushuu & \"Zamaa!\" Shimasu!",
+      "link": "http://127.0.0.1:5000/detail/4",
+      "hari": "Selasa",
+      "jam": "22:30",
+      "catatan": ""
+    },
+    {
+      "title": "Chitose-kun wa Ramune Bin no Naka",
+      "link": "http://127.0.0.1:5000/detail/1",
+      "hari": "Selasa",
+      "jam": "23:30",
+      "catatan": ""
+    }
+  ],
+  "Rabu": [],
+  "Kamis": [
+    {
+      "title": "Bukiyou na Senpai.",
+      "link": "http://127.0.0.1:5000/detail/2",
+      "hari": "Kamis",
+      "jam": "21:00",
+      "catatan": ""
+    },
+    {
+      "title": "Towa no Yuugure",
+      "link": "http://127.0.0.1:5000/detail/11",
+      "hari": "Kamis",
+      "jam": "22:56",
+      "catatan": ""
+    }
+  ],
+  "Jumat": [
+    {
+      "title": "Akujiki Reijou to Kyouketsu Koushaku",
+      "link": "http://127.0.0.1:5000/detail/12",
+      "hari": "Jumat",
+      "jam": "00:00",
+      "catatan": ""
+    },
+    {
+      "title": "Potion, Wagami wo Tasukeru",
+      "link": "/detail/13",
+      "hari": "Jumat",
+      "jam": "00:15",
+      "catatan": ""
+    }
+  ],
+  "Sabtu": [
+    {
+      "title": "Nageki no Bourei wa Intai shitai Part 2",
+      "link": "http://127.0.0.1:5000/detail/8",
+      "hari": "Sabtu",
+      "jam": "22:30",
+      "catatan": ""
+    },
+    {
+      "title": "Spy x Family Season 3",
+      "link": "http://127.0.0.1:5000/detail/3",
+      "hari": "Sabtu",
+      "jam": "23:00",
+      "catatan": ""
+    }
+  ],
+  "Minggu": [
+    {
+      "title": "One Punch Man 3",
+      "link": "https://chestnutty-marna-understandingly.ngrok-free.dev/detail/9",
+      "hari": "Minggu",
+      "jam": "22:15",
+      "catatan": ""
+    }
+  ],
+  "Tidak Diketahui": []
+}

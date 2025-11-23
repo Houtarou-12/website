@@ -1,0 +1,416 @@
+{% extends "base.html" %}
+{% block title %}Detail Anime - {{ anime.title }}{% endblock %}
+{% block content %}
+
+<h2 class="full-width-title">{{ anime.title }}</h2>
+
+<div class="detail-grid">
+  <div class="poster-section">
+    <img src="{{ anime.poster }}" alt="{{ anime.title }}" class="detail-image">
+    <div class="score-stack">
+      <span class="score-box">⭐ {{ anime.score }}</span>
+      <a href="{{ anime.url }}" target="_blank" class="mal-link">MyAnimeList</a>
+    </div>
+    <!-- Tombol Perbarui Data (scraping manual) -->
+    <form method="POST" action="/detail/{{ index }}/update" style="margin-top:10px;">
+      <button type="submit" class="btn-primary">🔄 Perbarui Data</button>
+    </form>
+  </div>
+
+  <div class="info-section">
+    <ul class="detail-list">
+      <li><strong>Tipe:</strong> {{ anime.type or '-' }}</li>
+      <li><strong>Episode:</strong> {{ anime.episodes or '-' }}</li>
+      <li><strong>Status:</strong> {{ anime.status or '-' }}</li>
+      <li><strong>Penayangan:</strong> {{ anime.airing or '-' }}</li>
+      <li><strong>Studio:</strong> {{ anime.studios | join(', ') if anime.studios else '-' }}</li>
+      <li><strong>Sumber:</strong> {{ anime.source or '-' }}</li>
+      <li><strong>Genre:</strong> {{ anime.genres | join(', ') if anime.genres else '-' }}</li>
+      {% if anime.themes %}
+        <li><strong>Tema:</strong> {{ anime.themes | join(', ') }}</li>
+      {% endif %}
+      {% if anime.demographics %}
+        <li><strong>Demografi:</strong> {{ anime.demographics | join(', ') }}</li>
+      {% endif %}
+    </ul>
+  </div>
+</div>
+
+<div class="sinopsis-section">
+  <h3>📝 Sinopsis</h3>
+  <pre class="sinopsis-text single-line" id="sinopsis-text">
+{{ anime.synopsis[:250] }}{% if anime.synopsis|length > 250 %}...{% endif %}
+  </pre>
+  {% if anime.synopsis|length > 250 %}
+    <button class="toggle-btn" onclick="toggleSinopsis()">Lihat Selengkapnya</button>
+  {% endif %}
+</div>
+
+<div class="projek-section">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h3 style="margin:0;">🎬 Proyek Garapan</h3>
+    <button onclick="openProyekModal()" class="btn-primary">+Proyek</button>
+  </div>
+
+  <table style="width:100%; border-collapse:collapse; color:#fff; margin-top:10px;">
+    <thead>
+      <tr style="border-bottom:1px solid #444;">
+        <th style="padding:6px; text-align:left;">Penggarap</th>
+        <th style="padding:6px; text-align:left;">Edit</th>
+        <th style="padding:6px; text-align:left;">Status</th>
+        <th style="padding:6px; text-align:left;">Takarir</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for p in projects %}
+        <tr style="border-bottom:1px solid #444;">
+          <td style="padding:6px; font-weight:600;">{{ p.penggarap }}</td>
+          <td style="padding:6px;">
+            <button onclick="openEditProyekModal({{ loop.index0 }})" class="btn-edit">✎ Edit</button>
+          </td>
+          <td style="padding:6px;">
+            {% if p.status == "Berjalan" %}
+              <span class="status-label status-berjalan">{{ p.status }}</span>
+            {% elif p.status == "Selesai" %}
+              <span class="status-label status-selesai">{{ p.status }}</span>
+            {% elif p.status == "Mangkrak" %}
+              <span class="status-label status-mangkrak">{{ p.status }}</span>
+            {% elif p.status == "Tentatif" %}
+              <span class="status-label status-tentatif">{{ p.status }}</span>
+            {% else %}
+              {{ p.status }}
+            {% endif %}
+          </td>
+          <td style="padding:6px;">
+            {% if p.unggahan %}
+              <a href="{{ p.unggahan }}" target="_blank" class="takarir-link">{{ p.takarir }} 🔗</a>
+            {% else %}
+              <span class="takarir-label">{{ p.takarir }} 🔗</span>
+            {% endif %}
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="padding:6px; font-size:0.75em; background-color:#1a1a1a;">
+            {% if p.catatan %}
+              📝 {{ p.catatan }}
+            {% else %}
+              <span style="opacity:0.5;">Kosong...</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="4" style="padding:6px; opacity:0.5;">Belum ada proyek</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modal Tambah/Edit Proyek -->
+<div id="proyekModal" class="modal hidden">
+  <div class="modal-content">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <h3 id="modal-title">➕ Tambah Proyek</h3>
+      <form method="POST" id="hapusForm" style="display:none;">
+        <button type="submit" class="btn-hapus-top">🗑</button>
+      </form>
+    </div>
+    <form id="proyekForm" onsubmit="submitProyek(event)">
+      <input type="hidden" name="anime_title" value="{{ anime.title }}">
+
+      <div class="form-group">
+        <label for="penggarap">Penggarap:</label>
+        <select name="penggarap" id="penggarap" required>
+          {% for g in daftar_penggarap %}
+            <option value="{{ g }}">{{ g }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Status:</label>
+        <div class="radio-group">
+          <label><input type="radio" name="status" value="Mangkrak"> Mangkrak</label>
+          <label><input type="radio" name="status" value="Berjalan" checked> Berjalan</label>
+          <label><input type="radio" name="status" value="Tentatif"> Tentatif</label>
+          <label><input type="radio" name="status" value="Selesai"> Selesai</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Takarir:</label>
+        <div class="radio-group">
+          <label><input type="radio" name="takarir" value="Softsub" checked> Softsub</label>
+          <label><input type="radio" name="takarir" value="Hardsub"> Hardsub</label>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="unggahan">Unggahan:</label>
+        <input type="text" name="unggahan" id="unggahan">
+      </div>
+
+      <div class="form-group">
+        <label for="catatan">Catatan:</label>
+        <textarea name="catatan" id="catatan"></textarea>
+      </div>
+
+      <p id="unggahan-warning" style="color:red; display:none;">⚠️ Masukkan tautan unggahan!</p>
+
+      <div class="modal-buttons">
+        <button type="submit" class="btn-primary">Simpan</button>
+        <button type="button" onclick="closeProyekModal()" class="btn-secondary">Tutup</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<a href="{{ url_for('halaman_katalog') }}" class="back-link">← Kembali ke Katalog</a>
+<script>
+function submitProyek(e) {
+  e.preventDefault();
+  const form = document.getElementById("proyekForm");
+  const data = new FormData(form);
+  const status = data.get("status");
+  const unggahan = data.get("unggahan")?.trim();
+  const warning = document.getElementById("unggahan-warning");
+
+  if (["Berjalan", "Mangkrak", "Selesai"].includes(status) && unggahan === "") {
+    warning.style.display = "block";
+    return;
+  }
+  warning.style.display = "none";
+
+  fetch("/tambah-proyek", { method: "POST", body: data })
+    .then(res => res.json())
+    .then(result => {
+      if (result.success) {
+        closeProyekModal();
+        window.location.reload();
+      } else {
+        alert("Gagal menyimpan proyek: " + (result.error || ""));
+      }
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Terjadi kesalahan saat menyimpan.");
+    });
+}
+
+function openProyekModal() {
+  document.getElementById("modal-title").innerText = "➕ Tambah Proyek";
+  document.getElementById("hapusForm").style.display = "none";
+  document.getElementById("proyekForm").reset();
+  document.getElementById("proyekModal").classList.remove("hidden");
+}
+function closeProyekModal() {
+  document.getElementById("proyekModal").classList.add("hidden");
+}
+
+function toggleSinopsis() {
+  const text = document.getElementById("sinopsis-text");
+  const btn = document.querySelector(".toggle-btn");
+  if (btn.innerText === "Lihat Selengkapnya") {
+    text.innerText = {{ anime.synopsis|tojson }};
+    text.classList.remove("single-line");
+    btn.innerText = "Tutup";
+  } else {
+    text.innerText = {{ (anime.synopsis[:250] ~ ('...' if anime.synopsis|length > 250 else ''))|tojson }};
+    text.classList.add("single-line");
+    btn.innerText = "Lihat Selengkapnya";
+  }
+}
+
+function openEditProyekModal(id) {
+  document.getElementById("modal-title").innerText = "✎ Edit Proyek";
+  document.getElementById("hapusForm").action = "/detail/{{ index }}/proyek/" + id + "/hapus";
+  document.getElementById("hapusForm").style.display = "inline";
+  const proyek = {{ projects|tojson }};
+  const p = proyek[id];
+  if (!p) return;
+  document.getElementById("penggarap").value = p.penggarap;
+  document.querySelectorAll('input[name="status"]').forEach(el => el.checked = (el.value === p.status));
+  document.querySelectorAll('input[name="takarir"]').forEach(el => el.checked = (el.value === p.takarir));
+  document.getElementById("unggahan").value = p.unggahan || "";
+  document.getElementById("catatan").value = p.catatan || "";
+  document.getElementById("proyekModal").classList.remove("hidden");
+}
+</script>
+
+<style>
+body {
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+.poster-section img.detail-image {
+  max-width: 100%;
+  border-radius: 6px;
+}
+.score-stack { margin-top: 8px; }
+.score-box {
+  display: inline-block;
+  background-color: #222;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 1rem;
+}
+.mal-link {
+  display: inline-block;
+  margin-left: 8px;
+  font-size: 0.85em;
+  color: #4da6ff;
+  text-decoration: none;
+}
+.detail-list li {
+  font-size: 0.9rem;
+}
+.detail-list li strong {
+  display: block;
+  margin-bottom: 2px;
+}
+.sinopsis-text {
+  font-size: 0.95em;
+  line-height: 1.5;
+  text-align: justify;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  margin-bottom: 12px;
+}
+.single-line {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.toggle-btn {
+  margin-top: 8px;
+  padding: 6px 12px;
+  font-size: 0.95em;
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+}
+.modal {
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background: rgba(0,0,0,0.6);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.modal-content {
+  background:#1e1e1e;
+  padding:20px;
+  border-radius:6px;
+  width:100%;
+  max-width:400px;
+  color:#fff;
+  box-sizing: border-box;
+}
+.hidden { display:none; }
+.modal-buttons { display:flex; gap:10px; justify-content:flex-end; }
+.btn-primary {
+  padding:6px 12px;
+  background-color:#007BFF;
+  color:#fff;
+  border:none;
+  border-radius:4px;
+}
+.btn-secondary {
+  padding:6px 12px;
+  background-color:#FFD700;
+  color:#000;
+  border:none;
+  border-radius:4px;
+}
+.btn-edit {
+  padding:4px 8px;
+  font-size:0.75em;
+  background-color:#ffc107;
+  color:#000;
+  border:none;
+  border-radius:4px;
+}
+.btn-hapus-top {
+  padding:4px 8px;
+  font-size:0.75em;
+  background-color:#dc3545;
+  color:#fff;
+  border:none;
+  border-radius:4px;
+}
+.status-label {
+  padding:2px 8px;
+  border-radius:4px;
+  font-size:0.85em;
+}
+.status-berjalan { background-color:#28a745; color:#fff; }
+.status-selesai { background-color:#007bff; color:#fff; }
+.status-mangkrak { background-color:#dc3545; color:#fff; }
+.status-tentatif { background-color:#6c757d; color:#fff; }
+.takarir-link, .takarir-label {
+  color:#4da6ff;
+  text-decoration:none;
+  font-size:0.85em;
+}
+.radio-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+.form-group { margin-bottom: 12px; }
+.form-group label {
+  display: block;
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+.form-group select,
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #666;
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+/* Mobile-only adjustments */
+@media (max-width: 768px) {
+  .detail-grid,
+  .info-section,
+  .sinopsis-section,
+  .projek-section {
+    display:block;
+    width:100vw;
+    padding:0;
+    box-sizing:border-box;
+  }
+  .poster-section { text-align:center; margin-bottom:16px; }
+  .poster-section img.detail-image { width:150px; height:auto; margin:0 auto; border-radius:0; }
+  .score-stack { display:none; }
+  .sinopsis-text { font-size:0.85em; line-height:1.4; text-align:left; }
+  .toggle-btn { width:100%; text-align:center; }
+  .modal-content { padding:16px; border-radius:0; max-width:100vw; width:100vw; }
+  .modal-content form { display:flex; flex-direction:column; gap:12px; }
+  .modal-buttons { flex-direction:column; align-items:stretch; }
+  .modal-buttons button { width:100%; margin-top:6px; }
+
+  .projek-section .btn-edit { font-size: 0.6em; padding: 2px 4px; }
+  .projek-section .status-label { font-size: 0.7em; padding: 2px 6px; }
+  .projek-section .takarir-link,
+  .projek-section .takarir-label { font-size: 0.75em; }
+}
+</style>
+
+{% endblock %}
